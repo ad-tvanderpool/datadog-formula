@@ -86,18 +86,15 @@ To deploy the Datadog Agent on your hosts:
 
 ### Configuration
 
-The formula configuration must be written in the `datadog` key of the pillar file. It contains three parts: `config`, `install_settings`, and `checks`.
+The formula configuration must be written in the `datadog` key of the pillar file. It contains four parts: `config`, `install_settings`, `integrations`, and `checks`.
 
 #### Config
 
-Under `config`, add the configuration options to write to the minions' Agent configuration file (`datadog.yaml` for Agent v6 & v7, `datadog.conf` for Agent v5).
+Under `config`, add the configuration options to write to the minions' Agent configuration file (`datadog.yaml`).
 
-Depending on the Agent version installed, different options can be set:
+All options supported by the Datadog Agent v7 configuration file are supported.
 
-- Agent v6 & v7: all options supported by the Agent's configuration file are supported.
-- Agent v5: only the `api_key` option is supported.
-
-The example below sets your Datadog API key and the Datadog site to `datadoghq.eu` (available for Agent v6 & v7).
+The example below sets your Datadog API key and the Datadog site to `datadoghq.eu`.
 
 ```text
   datadog:
@@ -112,56 +109,70 @@ Under `install_settings`, configure the Agent installation option:
 
 - `agent_version`: The version of the Agent to install (defaults to the latest Agent v7).
 
-The example below installs Agent v6.14.1:
+The example below installs Agent v7.48.0:
 
 ```text
   datadog:
     install_settings:
-      agent_version: 6.14.1
+      agent_version: 7.48.0
 ```
 
-#### Checks
+#### Integrations
 
-To add an Agent integration to your host, use the `checks` variable with the check's name as the key. Each check has two options:
+To add a Datadog third-party integration to your host, use the `integrations` variable with the integration's name as the key. Integration configurations are deployed to `/etc/datadog-agent/conf.d/<integration_name>.d/conf.yaml`.
+
+Each integration has the following options:
 
 | Option    | Description                                                                                                                                                             |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `config`  | Add the configuration options to write to the check's configuration file:<br>Agent v6 & v7: `<confd_path>/<check>.d/conf.yaml`<br>Agent v5: `<confd_path>/<check>.yaml` |
-| `version` | For Agent v6 & v7, the version of the check to install (defaults to the version bundled with the Agent).                                                                |
-| `third_party` | For Agent v6 & v7 (versions v6.21.0/v7.21.0 and higher only), boolean to indicate that the integration to install is a third-party integration. Must be paired with the `version` option.                                                                |
+| `config`  | Add the configuration options to write to the integration's configuration file: `/etc/datadog-agent/conf.d/<integration_name>.d/conf.yaml` |
+| `version` | The version of the integration to install (defaults to the version bundled with the Agent).                                                                |
 
-Below is an example to use v1.4.0 of the [Directory][3] integration monitoring the `/srv/pillar` directory:
+Below is an example to use v1.4.0 of the [MySQL][3] integration:
 
 ```text
 datadog:
   config:
     api_key: <YOUR_DD_API_KEY>
   install_settings:
-    agent_version: <AGENT7_VERSION>
-  checks:
-    directory:
+    agent_version: latest
+  integrations:
+    mysql:
       config:
         instances:
-          - directory: "/srv/pillar"
-            name: "pillars"
+          - host: 127.0.0.1
+            port: 3306
+            username: datadog
+            password: <PASSWORD>
       version: 1.4.0
 ```
 
-Below is an example to use v1.0.0 of a sample third-party integration named "third-party-integration":
+#### Checks
 
-```
+To add a custom check to your host, use the `checks` variable with the check's name as the key. Custom check configurations are deployed to `/etc/datadog-agent/check.d/<check_name>.d/conf.yaml`.
+
+Each check has the following options:
+
+| Option    | Description                                                                                                                                                             |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `config`  | Add the configuration options to write to the check's configuration file: `/etc/datadog-agent/check.d/<check_name>.d/conf.yaml` |
+| `version` | The version of the check to install (optional; only needed if the check is installed from a versioned package).                                                                |
+
+Below is an example of a custom check named `custom_check` that monitors a TCP endpoint:
+
+```text
 datadog:
   config:
     api_key: <YOUR_DD_API_KEY>
   install_settings:
-    agent_version: <AGENT7_VERSION>
+    agent_version: latest
   checks:
-    third-party-integration:
+    custom_check:
       config:
         instances:
-          - some_config: "some value"
-      version: 1.0.0
-      third_party: true
+          - host: 127.0.0.1
+            port: 8080
+            name: "custom_endpoint"
 ```
 
 ##### Logs
@@ -173,9 +184,9 @@ datadog:
     logs_enabled: true
 ```
 
-To send logs to Datadog, use the `logs` key in a check (either an existing check to setup logs for an integration, or a custom check to setup custom log collection). The following example uses a custom check named `system_logs`.
+To send logs to Datadog, use the `logs` key in either an integration or check. The following example uses a custom check named `system_logs`.
 
-The contents of the `config:` key of this check is written to the `/etc/datadog-agent/conf.d/<check_name>.d/conf.yaml` file (in this example: `/etc/datadog-agent/conf.d/system_logs.d/conf.yaml`).
+The contents of the `config:` key of this check is written to the `/etc/datadog-agent/check.d/system_logs.d/conf.yaml` file.
 
 To list the logs you want to collect, fill the `config` section the same way you'd fill the `conf.yaml` file of a custom log collection configuration file (see the section on [custom log collection](https://docs.datadoghq.com/agent/logs/?tab=tailfiles#custom-log-collection) in the official docs).
 

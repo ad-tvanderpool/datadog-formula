@@ -5,6 +5,8 @@ datadog:
     python_version: 2
     hostname: test
 
+  integrations: {}
+
   checks:
     directory:
       config:

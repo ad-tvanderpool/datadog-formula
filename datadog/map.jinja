@@ -11,6 +11,7 @@
 {% set default_settings = {
     'datadog': {
         'config': {},
+        'integrations': {},
         'checks': {},
         'install_settings': {
             'agent_version': 'latest',
@@ -24,6 +25,7 @@
 {# Merge in datadog pillar #}
 {% set datadog = salt['pillar.get']('datadog', default=default_settings.datadog, merge=True) %}
 {% set datadog_config = datadog['config'] %}
+{% set datadog_integrations = datadog['integrations'] %}
 {% set datadog_checks = datadog['checks'] %}
 {% set datadog_install_settings = datadog['install_settings'] %}
 
@@ -47,28 +49,20 @@
     {%- set latest_agent_version = true %}
 {%- else %}
     {%- set latest_agent_version = false %}
-    {%- set parsed_version = datadog_install_settings.agent_version | regex_match('(([0-9]+)\.[0-9]+\.[0-9]+)(?:~(rc|beta)(\.([0-9]+))?)?') %}
 {%- endif %}
 
-{# Determine defaults depending on specified version #}
-{%- if latest_agent_version or parsed_version[1] != '5' %}
-    {% do datadog_install_settings.update({'config_folder': '/etc/datadog-agent'}) %}
-{%- else %}
-    {% do datadog_install_settings.update({'config_folder': '/etc/dd-agent'}) %}
-{%- endif %}
-
-{%- if latest_agent_version or parsed_version[1] != '5' %}
-    {% do datadog_install_settings.update({'config_file': 'datadog.yaml'}) %}
-{%- else %}
-    {% do datadog_install_settings.update({'config_file': 'datadog.conf'}) %}
-{%- endif %}
+{# Set hardcoded paths for Agent v7+ #}
+{% do datadog_install_settings.update({'config_folder': '/etc/datadog-agent'}) %}
+{% do datadog_install_settings.update({'config_file': 'datadog.yaml'}) %}
 
 {%- if 'confd_path' in datadog_config %}
     {% do datadog_install_settings.update({'confd_path': datadog_config.confd_path }) %}
 {%- else %}
-    {%- if latest_agent_version or parsed_version[1] != '5' %}
-        {% do datadog_install_settings.update({'confd_path': '/etc/datadog-agent/conf.d'}) %}
-    {%- else %}
-        {% do datadog_install_settings.update({'confd_path': '/etc/dd-agent/conf.d'}) %}
-    {%- endif %}
+    {% do datadog_install_settings.update({'confd_path': '/etc/datadog-agent/conf.d'}) %}
+{%- endif %}
+
+{%- if 'checkd_path' in datadog_config %}
+    {% do datadog_install_settings.update({'checkd_path': datadog_config.checkd_path }) %}
+{%- else %}
+    {% do datadog_install_settings.update({'checkd_path': '/etc/datadog-agent/check.d'}) %}
 {%- endif %}

@@ -2,8 +2,21 @@ datadog:
   config:
     api_key: aaaaaaaabbbbbbbbccccccccdddddddd
     site: datadoghq.com
-    python_version: 2
+    logs_enabled: true
 
+  # Third-party integrations deployed to /etc/datadog-agent/conf.d/<integration_name>.d/conf.yaml
+  integrations:
+    mysql:
+      config:
+        init_config:
+        instances:
+          - host: 127.0.0.1
+            port: 3306
+            username: datadog
+            password: example_password
+      version: 1.4.0
+
+  # Custom checks deployed to /etc/datadog-agent/check.d/<check_name>.d/conf.yaml
   checks:
     process:
       config:
@@ -18,6 +31,12 @@ datadog:
           - host: 127.0.0.1
             name: sshd
             port: 22
+    system_logs:
+      config:
+        logs:
+          - type: file
+            path: "/var/log/syslog"
+            service: "system"
 
   install_settings:
     agent_version: latest
