@@ -3,8 +3,7 @@
     datadog_apt_trusted_d_keyring,
     datadog_apt_usr_share_keyring,
     datadog_install_settings,
-    latest_agent_version,
-    parsed_version
+    latest_agent_version
   with context %}
 
 {% macro import_apt_key(key_fingerprint, key_url) %}
@@ -68,20 +67,13 @@ datadog-gnupg:
 datadog-repo:
   file.managed:
     {# Determine beta or stable distribution from version #}
-    {%- if not latest_agent_version and (parsed_version[2] == 'beta' or parsed_version[2] == 'rc') %}
+    {%- if not latest_agent_version and ('beta' in datadog_install_settings.agent_version.lower() or 'rc' in datadog_install_settings.agent_version.lower()) %}
         {% set distribution = 'beta' %}
     {%- else %}
         {% set distribution = 'stable' %}
     {%- endif %}
-    {# Determine which channel we should look in #}
-    {%- if latest_agent_version or parsed_version[1] == '7' %}
-        {% set packages = '7' %}
-    {%- elif parsed_version[1] == '6' %}
-        {% set packages = '6' %}
-    {%- else %}
-        {% set packages = 'main' %}
-    {%- endif %}
-    - contents: deb [signed-by={{ datadog_apt_usr_share_keyring }}] https://apt.datadoghq.com/ {{ distribution }} {{ packages }}
+    {# Agent v7 only #}
+    - contents: deb [signed-by={{ datadog_apt_usr_share_keyring }}] https://apt.datadoghq.com/ {{ distribution }} 7
     - mode: 0644
     - name: /etc/apt/sources.list.d/datadog.list
     - require:
@@ -92,30 +84,16 @@ datadog-repo:
 datadog-repo:
   pkgrepo.managed:
     - humanname: "Datadog, Inc."
-      {#- Determine the location of the package we want #}
-      {%- if not latest_agent_version and (parsed_version[2] == 'beta' or parsed_version[2] == 'rc') %}
-          {%- if parsed_version[1] == '7' %}
-              {% set path = 'beta/7' %}
-          {%- elif parsed_version[1] == '6' %}
-              {% set path = 'beta/6' %}
-          {%- else %}
-              {% set path = 'beta' %}
-          {%- endif %}
-      {%- elif latest_agent_version or parsed_version[1] == '7' %}
-          {% set path = 'stable/7' %}
-      {%- elif parsed_version[1] == '6' %}
-          {% set path = 'stable/6' %}
+      {#- Determine the location of the package we want (Agent v7 only) #}
+      {%- if not latest_agent_version and ('beta' in datadog_install_settings.agent_version.lower() or 'rc' in datadog_install_settings.agent_version.lower()) %}
+          {% set path = 'beta/7' %}
       {%- else %}
-          {% set path = 'rpm' %}
+          {% set path = 'stable/7' %}
       {%- endif %}
     {%- if grains['os_family'].lower() == 'suse' %}
     {% set path = 'suse/' + path %}
     {%- endif %}
-    {%- if latest_agent_version or parsed_version[1] != '5' %}
     - repo_gpgcheck: '1'
-    {%- else %}
-    - repo_gpgcheck: '0'
-    {%- endif %}
     - name: datadog
     - baseurl: https://yum.datadoghq.com/{{ path }}/{{ grains['cpuarch'] }}
     - gpgcheck: '1'

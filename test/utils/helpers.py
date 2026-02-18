@@ -34,10 +34,8 @@ def check_major_version(installed_version, expected_major_version):
 
 def get_config_dir(agent_version):
   """Get the agent configuration directory on *nix systems."""
-  if int(agent_version) == 5:
-    return "/etc/dd-agent"
-  else:
-    return "/etc/datadog-agent"
+  # Agent v7 only
+  return "/etc/datadog-agent"
 
 
 def check_install_info(agent_version):

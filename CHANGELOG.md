@@ -1,5 +1,17 @@
 # Changes
 
+## 4.0 / 2026-02-17
+
+**BREAKING CHANGES**
+
+* [BREAKING] Remove Agent v5 and v6 support - only Datadog Agent v7 is now supported
+* [BREAKING] Remove `python_version` pillar option (Agent v7 always uses Python 3)
+* [BREAKING] Simplified repository configuration to only support Agent v7 paths
+* [FEATURE] Improved version detection logic for beta/RC releases
+* [BUGFIX] Fixed undefined `parsed_version` variable that was causing installation failures
+
+**Migration Notes**: Users running Agent v5 or v6 must upgrade to Agent v7 before using this version of the formula. Custom checks must be Python 3 compatible.
+
 ## 3.7 / 2023-10-31
 
 * [FEATURE] Add support for SUSE [#89][]

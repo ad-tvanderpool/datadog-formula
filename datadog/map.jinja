@@ -51,7 +51,7 @@
     {%- set latest_agent_version = false %}
 {%- endif %}
 
-{# Set hardcoded paths for Agent v7+ #}
+{# Set hardcoded paths for Agent v7 (only version supported) #}
 {% do datadog_install_settings.update({'config_folder': '/etc/datadog-agent'}) %}
 {% do datadog_install_settings.update({'config_file': 'datadog.yaml'}) %}
 

@@ -2,7 +2,6 @@ datadog:
   config:
     api_key: aaaaaaaabbbbbbbbccccccccdddddddd
     site: datadoghq.com
-    python_version: 2
     hostname: test
 
   integrations: {}
